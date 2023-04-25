@@ -23,7 +23,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView imageViewLeft, imageViewRight;
     private Bitmap imageBitMap, imageRescaled, imageLuminanceY, imagePowerLaw, greyScale;
     private RadioGroup radioGroup;
-    private boolean imageSelected = false, newImageSelected = false;
+    private boolean imageSelected = false, newImageSelected = false, isClearingRadioGroup = false;
     private float [] lowGammaLUT;// < 1 makes darker pixels lighter with less change to lighter pixels
     private float [] highGammaLUT; // > 1 makes lighter pixels darker with less change to darker pixels
     private boolean highIntensity = false;
@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 switch(checkedId){
                     case R.id.luminanceRadioButton:
+                        if(isClearingRadioGroup) break;
                         if(!imageSelected) {
                             Toast.makeText(getApplicationContext(), "No image selected", Toast.LENGTH_SHORT).show();
                             radioGroup.clearCheck();
@@ -54,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
                         setImageLuminanceY();
                         break;
                     case R.id.powerLawRadioButton:
+                        if(isClearingRadioGroup) break;
                         if(!imageSelected) {
                             Toast.makeText(getApplicationContext(), "No image selected", Toast.LENGTH_SHORT).show();
                             radioGroup.clearCheck();
@@ -157,6 +159,21 @@ public class MainActivity extends AppCompatActivity {
 
                 //imageViewLeft.setImageBitmap(imageBitMap);
                 scaleImage(imageBitMap);
+
+                if(imagePowerLaw != null){
+                    imagePowerLaw.recycle();
+                    imagePowerLaw = null;
+                }
+
+                if(imageLuminanceY != null){
+                    imageLuminanceY.recycle();
+                    imageLuminanceY = null;
+                }
+
+                isClearingRadioGroup = true;
+                radioGroup.clearCheck();
+                isClearingRadioGroup = false;
+
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } finally {
@@ -229,7 +246,8 @@ public class MainActivity extends AppCompatActivity {
             } else Y = (int) lowGammaLUT[Y];
 
             // calculates new pixel value and assigns it to current pixel
-            pixels[i] = Color.argb(a,Y,Cb,Cr);
+            //pixels[i] = Color.argb(a,Y,Cb,Cr);
+            pixels[i] = Color.argb(a, Y, g, b);
 
         }
 
@@ -240,6 +258,52 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setImagePowerLaw(){
+
+
+        // checks if bitmap already exists
+        if(imagePowerLaw != null){
+            imageViewRight.setImageBitmap(imagePowerLaw);
+            return;
+        }
+
+        imagePowerLaw = imageRescaled.copy(Bitmap.Config.ARGB_8888, true);
+        int width = imageRescaled.getWidth();
+        int height = imageRescaled.getHeight();
+
+        int[] pixels = new int[width*height];
+        imageRescaled.getPixels(pixels, 0, width, 0, 0, width, height);
+
+        // for loop to go through each pixel
+        int a,r,g,b, pixel;
+        for(int i = 0; i < pixels.length; i++){
+            // gets current pixel then gets ARGB values
+            pixel = pixels[i];
+            a = Color.alpha(pixel);
+            r = Color.red(pixel);
+            g = Color.green(pixel);
+            b = Color.blue(pixel);
+
+
+            if(highIntensity){
+                r = (int) highGammaLUT[r];
+                g = (int) highGammaLUT[g];
+                b = (int) highGammaLUT[b];
+            } else {
+                r = (int) lowGammaLUT[r];
+                g = (int) lowGammaLUT[g];
+                b = (int) lowGammaLUT[b];
+
+            }
+
+            // calculates new pixel value and assigns it to current pixel
+            pixels[i] = Color.argb(a,r,g,b);
+
+        }
+
+        // sets pixels to bitmap then sets the image view
+        imagePowerLaw.setPixels(pixels, 0, width, 0, 0, width, height);
+        imageViewRight.setImageBitmap(imagePowerLaw);
+
 
     }
 
