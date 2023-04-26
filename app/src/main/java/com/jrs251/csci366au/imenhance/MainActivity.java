@@ -68,8 +68,8 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    // method to convert image to grey scale
     private void convertToGreyscale(Bitmap image){
-
 
         int width = image.getWidth();
         int height = image.getHeight();
@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
             int r = Color.red(pixel);
             int g = Color.green(pixel);
             int b = Color.blue(pixel);
-            int grey = (int) (0.299 * r + 0.587 * g + 0.114 * b); // formula for calculating intensity
+            int grey = (int) (0.299 * r + 0.587 * g + 0.114 * b); // calculates luminance/greyscale pixel
             int newPixel = Color.rgb(grey, grey ,grey);
 
             pixels[i] = newPixel;
@@ -95,6 +95,9 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    // method to calculate intensity of image
+    // input arg should be an image that has already been converted
+    // to greyscale
     private double calculateAvgIntensity(Bitmap image){
 
         int width = image.getWidth();
@@ -116,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
         return average;
     }
 
+    // method to generate look up tables for 2 gamma values
     private void generateLookUpTables(){
 
         float lowGamma = 0.45f;
@@ -135,6 +139,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // method for selecting image
     public void selectImage(View view){
         Intent intent = new Intent();
         intent.setType("image/*");
@@ -160,16 +165,20 @@ public class MainActivity extends AppCompatActivity {
                 //imageViewLeft.setImageBitmap(imageBitMap);
                 scaleImage(imageBitMap);
 
+                // recycles bitmap and sets it to null
                 if(imagePowerLaw != null){
                     imagePowerLaw.recycle();
                     imagePowerLaw = null;
                 }
 
+                // recycles bitmap and sets it to null
                 if(imageLuminanceY != null){
                     imageLuminanceY.recycle();
                     imageLuminanceY = null;
                 }
 
+                // clears radio group check
+                // bool is to stop radio group listener from triggering
                 isClearingRadioGroup = true;
                 radioGroup.clearCheck();
                 isClearingRadioGroup = false;
@@ -186,6 +195,7 @@ public class MainActivity extends AppCompatActivity {
             }
     }
 
+    // scales down image
     private void scaleImage(Bitmap image){
 
         // divides pixel width/height by 2
@@ -241,13 +251,15 @@ public class MainActivity extends AppCompatActivity {
             Cb = (int) (128-0.169 *   r-0.331   * g + 0.500 * b);
             Cr = (int) (128+0.500 *   r - 0.419 * g - 0.081 * b);
 
+            // applies new pixel value only to luminance Y using LUT
+            // based on avg intensity
             if(highIntensity){
                 Y = (int) highGammaLUT[Y];
             } else Y = (int) lowGammaLUT[Y];
 
             // calculates new pixel value and assigns it to current pixel
-            //pixels[i] = Color.argb(a,Y,Cb,Cr);
-            pixels[i] = Color.argb(a, Y, g, b);
+            pixels[i] = Color.argb(a,Y,Cb,Cr);
+            //pixels[i] = Color.argb(a, Y, g, b);
 
         }
 
@@ -257,6 +269,8 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    // method converts the pixel values of an image using the
+    // respective gammaLUT based on the average intensity of the image
     private void setImagePowerLaw(){
 
 
@@ -284,6 +298,7 @@ public class MainActivity extends AppCompatActivity {
             b = Color.blue(pixel);
 
 
+            // sets the new RGB values using the LUT table based on whether the image is high intensity
             if(highIntensity){
                 r = (int) highGammaLUT[r];
                 g = (int) highGammaLUT[g];
