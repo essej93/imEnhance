@@ -38,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
         imageViewRight = findViewById(R.id.imageViewRight);
         radioGroup = findViewById(R.id.imageRadioGroup);
 
-        generateLookUpTables();
+        generateLookUpTables(); // generates the LUT on create
 
         // sets radio group listener
         radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
                             radioGroup.clearCheck();
                             break;
                         }
-                        setImageLuminanceY();
+                        applyPowerLawLuminanceY();
                         break;
                     case R.id.powerLawRadioButton:
                         if(isClearingRadioGroup) break;
@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
                             radioGroup.clearCheck();
                             break;
                         }
-                        setImagePowerLaw();
+                        applyPowerLawRGB();
                         break;
                 }
             }
@@ -80,6 +80,7 @@ public class MainActivity extends AppCompatActivity {
 
         greyScale = image.copy(Bitmap.Config.ARGB_8888, true);
 
+        // converts image to grey scale
         for (int i = 0; i < pixels.length; i++) {
             int pixel = pixels[i];
             int r = Color.red(pixel);
@@ -107,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
         int[] pixels = new int[width*height];
         image.getPixels(pixels, 0, width, 0, 0, width, height);
 
+        // gets intensity of image
         double sum = 0;
         for (int i = 0; i < pixels.length; i++) {
             int pixel = pixels[i];
@@ -130,10 +132,12 @@ public class MainActivity extends AppCompatActivity {
         lowGammaLUT = new float[SIZE];
         highGammaLUT = new float[SIZE];
 
+        // generates low gamme LUT
         for(int i = 0; i < SIZE; i++){
             lowGammaLUT[i] = (float) (255 * Math.pow(i / 255.0, lowGamma));
         }
 
+        // generates high gamma LUT
         for(int i = 0; i < SIZE; i++){
             highGammaLUT[i] = (float) (255 * Math.pow(i / 255.0, highGamma));
         }
@@ -208,18 +212,21 @@ public class MainActivity extends AppCompatActivity {
 
         imageViewLeft.setImageBitmap(imageRescaled);
         imageViewRight.setImageBitmap(imageRescaled);
-        imageSelected = true;
+        imageSelected = true; // boolean for error handling
 
         convertToGreyscale(imageRescaled);
         determineIntensity();
     }
 
+    // method determines the intensity of the image
     private void determineIntensity(){
         if(calculateAvgIntensity(greyScale) > 127.5) highIntensity = true;
         else highIntensity = false;
     }
 
-    private void setImageLuminanceY(){
+
+    // method applies the powerr law to luminance Y
+    private void applyPowerLawLuminanceY(){
 
         // checks if bitmap already exists
         if(imageLuminanceY != null){
@@ -259,7 +266,6 @@ public class MainActivity extends AppCompatActivity {
 
             // calculates new pixel value and assigns it to current pixel
             pixels[i] = Color.argb(a,Y,Cb,Cr);
-            //pixels[i] = Color.argb(a, Y, g, b);
 
         }
 
@@ -271,7 +277,7 @@ public class MainActivity extends AppCompatActivity {
 
     // method converts the pixel values of an image using the
     // respective gammaLUT based on the average intensity of the image
-    private void setImagePowerLaw(){
+    private void applyPowerLawRGB(){
 
 
         // checks if bitmap already exists

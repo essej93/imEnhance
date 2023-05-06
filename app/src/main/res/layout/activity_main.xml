@@ -21,14 +21,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Luminance(Y)" />
+            android:text="Apply Power Law Luminance(Y)" />
 
         <RadioButton
             android:id="@+id/powerLawRadioButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Power Law Transform" />
+            android:text="Power Law Transform (RGB)" />
 
     </RadioGroup>
 
